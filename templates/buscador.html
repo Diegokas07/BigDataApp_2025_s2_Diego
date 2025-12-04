@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador - BigData</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet">
+    <style>
+        .search-hero {
+            background: linear-gradient(135deg, rgba(0, 108, 103, 0.1), rgba(0, 168, 150, 0.05));
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 108, 103, 0.1);
+        }
+        .search-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(2, 44, 34, .08);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 2rem;
+        }
+        .search-input {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .search-input:focus {
+            border-color: #00A896;
+            box-shadow: 0 0 0 3px rgba(0, 168, 150, 0.1);
+        }
+        .btn-search {
+            background: linear-gradient(135deg, #00A896 0%, #006C67 100%);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 168, 150, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 168, 150, 0.4);
+        }
+        .results-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(2, 44, 34, .08);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .results-header {
+            background: linear-gradient(135deg, #006C67 0%, #00A896 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+        }
+        .aggs-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid #e5e7eb;
+        }
+        .aggs-title {
+            color: #006C67;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .aggs-section {
+            margin-bottom: 1.5rem;
+        }
+        .aggs-section:last-child {
+            margin-bottom: 0;
+        }
+        .aggs-section h6 {
+            color: #0F172A;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+        .aggs-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .aggs-list li {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #64748B;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 0.25rem;
+        }
+        .aggs-list li:hover {
+            background-color: rgba(0, 168, 150, 0.1);
+            color: #006C67;
+            transform: translateX(3px);
+        }
+        .aggs-list li.active {
+            background-color: #00A896;
+            color: white;
+        }
+        .aggs-list li.active .aggs-badge {
+            background: white;
+            color: #00A896;
+        }
+        .aggs-badge {
+            background: #00A896;
+            color: white;
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .table thead th {
+            background: linear-gradient(135deg, #006C67 0%, #00A896 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        .table tbody tr:hover {
+            background-color: rgba(0, 168, 150, 0.05);
+        }
+        .content-preview {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .score-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="uc-header">
+        <div class="container">
+            <div class="header-inner">
+                <div class="brand">
+                    <img src="{{ url_for('static', filename='Images/logo_1.png') }}" alt="Universidad Central" class="logo">
+                    <span class="brand-text">Proyecto BigData</span>
+                </div>
+                <nav class="nav">
+                    <a class="nav-link" href="/"><i class="bi bi-house"></i> Inicio</a>
+                    <a class="nav-link active" href="/buscador"><i class="bi bi-search"></i> Buscador</a>
+                    <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> Acerca de</a>
+                    <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right"></i> Ingresar</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido -->
+    <div class="container" style="margin-top: 2rem; margin-bottom: 3rem;">
+        <!-- Hero -->
+        <div class="search-hero">
+            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #006C67;">
+                <i class="bi bi-search"></i> Buscador de documentos
+            </h1>
+            <p style="color: #64748B; margin-bottom: 0;">
+                Busca en la normativa del Ministerio de Educación por palabras clave
+            </p>
+        </div>
+        
+        <!-- Formulario de búsqueda -->
+        <div class="search-card">
+            <form id="formBuscar" onsubmit="buscar(event)">
+                <div class="row g-3">
+                    <div class="col-md-10">
+                        <label for="textoBuscar" class="form-label fw-semibold" style="color: #0F172A;">
+                            <i class="bi bi-pencil"></i> Texto a buscar
+                        </label>
+                        <input type="text" class="form-control search-input" id="textoBuscar" name="texto" 
+                               placeholder="Ingrese el texto que desea buscar..." required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-search w-100">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Mensaje de carga -->
+        <div id="div_cargando" class="text-center" style="display: none;">
+            <div class="spinner-border" style="color: #00A896;" role="status">
+                <span class="visually-hidden">Buscando...</span>
+            </div>
+            <p class="mt-3" style="color: #64748B; font-weight: 500;">
+                <i class="bi bi-hourglass-split"></i> Buscando documentos... Por favor espere.
+            </p>
+        </div>
+
+        <!-- Resultados -->
+        <div id="divResultados" style="display: none;">
+            <div class="results-card">
+                <div class="results-header">
+                    <i class="bi bi-file-earmark-text"></i> Resultados de la búsqueda - Total encontrado: <span id="totalResultados">0</span>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div class="row">
+                        <!-- Columna 1: Aggregations -->
+                        <div class="col-md-3">
+                            <div class="aggs-card">
+                                <div class="aggs-title">
+                                    <i class="bi bi-funnel"></i> Filtros y Agregaciones
+                                </div>
+                                <div id="divAggregations">
+                                    <!-- Las aggregations se mostrarán aquí -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Columna 2: Tabla de resultados -->
+                        <div class="col-md-9">
+                            <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb;">
+                                <div style="max-height: 700px; overflow-y: auto;">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 5%;"><i class="bi bi-hash"></i></th>
+                                                <th style="width: 12%;"><i class="bi bi-key"></i> ID</th>
+                                                <th style="width: 10%;"><i class="bi bi-star"></i> Score</th>
+                                                <th style="width: 15%;"><i class="bi bi-database"></i> Índice</th>
+                                                <th style="width: 58%;"><i class="bi bi-file-text"></i> Contenido</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaResultados">
+                                            <!-- Los resultados se mostrarán aquí -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div id="divError" class="alert alert-danger mt-4" style="display: none;" role="alert">
+            <strong>Error:</strong> <span id="mensajeError"></span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="uc-footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="left">
+                    <img src="{{ url_for('static', filename='Images/logo_1.png') }}" alt="Universidad Central" class="logo-sm">
+                    <span>Universidad Central — Maestría en Analítica de Datos</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para buscar
+        function buscar(event) {
+            event.preventDefault();
+            
+            const textoBuscar = document.getElementById('textoBuscar').value.trim();
+            
+            if (!textoBuscar) {
+                alert('Por favor, ingrese un texto para buscar');
+                return;
+            }
+            
+            // Ocultar resultados anteriores y mostrar carga
+            document.getElementById('divResultados').style.display = 'none';
+            document.getElementById('divError').style.display = 'none';
+            document.getElementById('div_cargando').style.display = 'block';
+            
+            // Realizar búsqueda
+            fetch('/buscar-elastic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    texto: textoBuscar,
+                    campo: '_all'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('div_cargando').style.display = 'none';
+                
+                if (data.success) {
+                    mostrarResultados(data);
+                } else {
+                    mostrarError(data.error || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('div_cargando').style.display = 'none';
+                mostrarError('Error al realizar la búsqueda');
+            });
+        }
+
+        // Función para mostrar resultados
+        function mostrarResultados(data) {
+            // Guardar todos los resultados
+            todosLosResultados = data.resultados || [];
+            
+            // Resetear filtros
+            filtrosActivos = { anio: null, tipo: null };
+            
+            // Mostrar total
+            document.getElementById('totalResultados').textContent = data.total || 0;
+            
+            // Mostrar aggregations
+            mostrarAggregations(data.aggregations || {});
+            
+            // Mostrar hits
+            mostrarHits(todosLosResultados);
+            
+            // Mostrar div de resultados
+            document.getElementById('divResultados').style.display = 'block';
+        }
+
+        // Función para mostrar aggregations
+        function mostrarAggregations(aggs) {
+            const divAggregations = document.getElementById('divAggregations');
+            divAggregations.innerHTML = '';
+            
+            if (!aggs || Object.keys(aggs).length === 0) {
+                divAggregations.innerHTML = '<p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">No hay agregaciones disponibles</p>';
+                return;
+            }
+            
+            // Procesar documentos_por_anio
+            if (aggs.documentos_por_anio && aggs.documentos_por_anio.buckets && aggs.documentos_por_anio.buckets.length > 0) {
+                const divAnio = document.createElement('div');
+                divAnio.className = 'aggs-section';
+                divAnio.innerHTML = '<h6><i class="bi bi-calendar3"></i> Por Año</h6><ul class="aggs-list" id="listDocumentosPorAnio"></ul>';
+                divAggregations.appendChild(divAnio);
+                
+                const listAnio = document.getElementById('listDocumentosPorAnio');
+                aggs.documentos_por_anio.buckets.forEach(bucket => {
+                    const li = document.createElement('li');
+                    const anio = bucket.key_as_string || bucket.key;
+                    li.innerHTML = `<span>${anio}</span><span class="aggs-badge">${bucket.doc_count}</span>`;
+                    li.setAttribute('data-anio', anio);
+                    li.onclick = () => filtrarPorAnio(anio);
+                    if (filtrosActivos.anio == anio) {
+                        li.classList.add('active');
+                    }
+                    listAnio.appendChild(li);
+                });
+            }
+            
+            // Procesar documentos_por_tipo
+            if (aggs.documentos_por_tipo && aggs.documentos_por_tipo.buckets && aggs.documentos_por_tipo.buckets.length > 0) {
+                const divTipo = document.createElement('div');
+                divTipo.className = 'aggs-section';
+                divTipo.innerHTML = '<h6><i class="bi bi-tags"></i> Por Tipo</h6><ul class="aggs-list" id="listDocumentosPorTipo"></ul>';
+                divAggregations.appendChild(divTipo);
+                
+                const listTipo = document.getElementById('listDocumentosPorTipo');
+                aggs.documentos_por_tipo.buckets.forEach(bucket => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${bucket.key}</span><span class="aggs-badge">${bucket.doc_count}</span>`;
+                    li.setAttribute('data-tipo', bucket.key);
+                    li.onclick = () => filtrarPorTipo(bucket.key);
+                    if (filtrosActivos.tipo == bucket.key) {
+                        li.classList.add('active');
+                    }
+                    listTipo.appendChild(li);
+                });
+            }
+        }
+
+        // Función para mostrar hits
+        function mostrarHits(hits) {
+            const tablaResultados = document.getElementById('tablaResultados');
+            tablaResultados.innerHTML = '';
+            
+            if (hits.length === 0) {
+                tablaResultados.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 2rem; color: #64748B;">No se encontraron resultados</td></tr>';
+                return;
+            }
+            
+            hits.forEach((hit, index) => {
+                const row = document.createElement('tr');
+                const source = hit._source || {};
+                
+                // Extraer información relevante
+                const nombre = source.nombre || '';
+                const descripcion = source.descripción || source.descripcion || '';
+                const tipo = source.tipo_documento || '';
+                const anio = source.año || '';
+                
+                // Crear vista del contenido
+                let contenidoVista = '';
+                if (nombre) {
+                    contenidoVista = `<strong>${nombre}</strong>`;
+                    if (descripcion) {
+                        const desc = descripcion.substring(0, 150);
+                        contenidoVista += `<br><small style="color: #64748B;">${desc}${descripcion.length > 150 ? '...' : ''}</small>`;
+                    }
+                    if (tipo || anio) {
+                        contenidoVista += `<br><div style="margin-top: 0.5rem;">`;
+                        if (tipo) contenidoVista += `<span style="background: #e0f2f1; color: #006C67; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-right: 0.5rem;"><i class="bi bi-tag"></i> ${tipo}</span>`;
+                        if (anio) contenidoVista += `<span style="background: #fff3e0; color: #d97706; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;"><i class="bi bi-calendar"></i> ${anio}</span>`;
+                        contenidoVista += `</div>`;
+                    }
+                } else {
+                    contenidoVista = JSON.stringify(source, null, 2).substring(0, 150) + '...';
+                }
+                
+                row.innerHTML = `
+                    <td style="font-weight: 600; color: #64748B;">${index + 1}</td>
+                    <td><code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${hit._id ? hit._id.substring(0, 8) + '...' : ''}</code></td>
+                    <td><span class="score-badge">${hit._score ? hit._score.toFixed(2) : 'N/A'}</span></td>
+                    <td><small style="color: #64748B;">${hit._index || ''}</small></td>
+                    <td>
+                        <div>${contenidoVista}</div>
+                        <div class="detalle-completo" style="display: none;">
+                            ${JSON.stringify(source, null, 2)}
+                        </div>
+                    </td>
+                `;
+                tablaResultados.appendChild(row);
+            });
+        }
+
+        // Función para mostrar error
+        function mostrarError(mensaje) {
+            document.getElementById('mensajeError').textContent = mensaje;
+            document.getElementById('divError').style.display = 'block';
+        }
+
+        // Variables globales para filtros y búsqueda
+        let ultimaBusqueda = [];
+        let todosLosResultados = [];
+        let filtrosActivos = {
+            anio: null,
+            tipo: null
+        };
+
+        // Función para mostrar detalle completo
+        function mostrarDetalle(index) {
+            if (ultimaBusqueda[index]) {
+                const source = ultimaBusqueda[index]._source || {};
+                const modalBody = document.getElementById('modalDetalleBody');
+                if (modalBody) {
+                    modalBody.innerHTML = '<pre class="json-view" style="max-height: 500px; overflow-y: auto;">' + JSON.stringify(source, null, 2) + '</pre>';
+                }
+            }
+        }
+
+        // Actualizar función mostrarHits para guardar datos
+        function mostrarHitsOriginal(hits) {
+            // Guardar para usar en detalles
+            ultimaBusqueda = hits;
+            
+            const tablaResultados = document.getElementById('tablaResultados');
+            tablaResultados.innerHTML = '';
+            
+            if (hits.length === 0) {
+                tablaResultados.innerHTML = '<tr><td colspan="5" class="text-center">No se encontraron resultados</td></tr>';
+                return;
+            }
+            
+            hits.forEach((hit, index) => {
+                const row = document.createElement('tr');
+                const source = hit._source || {};
+                
+                // Crear vista del contenido (primeros 200 caracteres)
+                let contenidoVista = '';
+                if (source.contenido) {
+                    contenidoVista = source.contenido.substring(0, 200);
+                    if (source.contenido.length > 200) {
+                        contenidoVista += '...';
+                    }
+                } else if (source.texto) {
+                    contenidoVista = source.texto.substring(0, 200);
+                    if (source.texto.length > 200) {
+                        contenidoVista += '...';
+                    }
+                } else {
+                    const sourceStr = JSON.stringify(source, null, 2);
+                    contenidoVista = sourceStr.substring(0, 200);
+                    if (sourceStr.length > 200) {
+                        contenidoVista += '...';
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${hit._id || ''}</td>
+                    <td>${hit._score ? hit._score.toFixed(4) : 'N/A'}</td>
+                    <td><small>${hit._index || ''}</small></td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 400px;" title="${source.contenido || source.texto || JSON.stringify(source).substring(0, 300)}">${contenidoVista}</div>
+                        <button class="btn btn-sm btn-link mt-1" onclick="mostrarDetalle(${index})" data-bs-toggle="modal" data-bs-target="#modalDetalle">
+                            Ver completo
+                        </button>
+                    </td>
+                `;
+                tablaResultados.appendChild(row);
+            });
+        }
+
+        // Reemplazar función mostrarHits
+        function mostrarHits(hits) {
+            mostrarHitsOriginal(hits);
+        }
+
+        // Función para filtrar por año
+        function filtrarPorAnio(anio) {
+            // Toggle del filtro
+            if (filtrosActivos.anio == anio) {
+                filtrosActivos.anio = null;
+            } else {
+                filtrosActivos.anio = anio;
+            }
+            
+            aplicarFiltros();
+        }
+
+        // Función para filtrar por tipo
+        function filtrarPorTipo(tipo) {
+            // Toggle del filtro
+            if (filtrosActivos.tipo == tipo) {
+                filtrosActivos.tipo = null;
+            } else {
+                filtrosActivos.tipo = tipo;
+            }
+            
+            aplicarFiltros();
+        }
+
+        // Función para aplicar filtros
+        function aplicarFiltros() {
+            let resultadosFiltrados = todosLosResultados;
+            
+            // Filtrar por año
+            if (filtrosActivos.anio !== null) {
+                resultadosFiltrados = resultadosFiltrados.filter(hit => {
+                    const source = hit._source || {};
+                    const anio = source.año || source.anio;
+                    return anio == filtrosActivos.anio;
+                });
+            }
+            
+            // Filtrar por tipo
+            if (filtrosActivos.tipo !== null) {
+                resultadosFiltrados = resultadosFiltrados.filter(hit => {
+                    const source = hit._source || {};
+                    const tipo = source.tipo_documento || source.tipo;
+                    return tipo == filtrosActivos.tipo;
+                });
+            }
+            
+            // Actualizar total de resultados
+            document.getElementById('totalResultados').textContent = resultadosFiltrados.length;
+            
+            // Mostrar resultados filtrados
+            mostrarHits(resultadosFiltrados);
+            
+            // Actualizar agregaciones dinámicamente
+            actualizarAgregacionesDinamicas(resultadosFiltrados);
+            
+            // Actualizar clases activas en agregaciones
+            actualizarEstadoFiltros();
+        }
+
+        // Función para actualizar estado visual de filtros
+        function actualizarEstadoFiltros() {
+            // Actualizar años
+            const itemsAnio = document.querySelectorAll('#listDocumentosPorAnio li');
+            itemsAnio.forEach(item => {
+                const anio = item.getAttribute('data-anio');
+                if (filtrosActivos.anio == anio) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Actualizar tipos
+            const itemsTipo = document.querySelectorAll('#listDocumentosPorTipo li');
+            itemsTipo.forEach(item => {
+                const tipo = item.getAttribute('data-tipo');
+                if (filtrosActivos.tipo == tipo) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // Función para actualizar agregaciones dinámicamente según filtros
+        function actualizarAgregacionesDinamicas(resultados) {
+            // Calcular agregaciones de los resultados filtrados
+            const agregacionesCalculadas = calcularAgregaciones(resultados);
+            
+            // Si hay un filtro de año activo, actualizar solo los tipos
+            if (filtrosActivos.anio !== null) {
+                actualizarListaTipos(agregacionesCalculadas.tipos);
+            } else if (filtrosActivos.tipo !== null) {
+                // Si hay un filtro de tipo activo, actualizar solo los años
+                actualizarListaAnios(agregacionesCalculadas.anios);
+            }
+        }
+
+        // Función para calcular agregaciones de un conjunto de resultados
+        function calcularAgregaciones(resultados) {
+            const anios = {};
+            const tipos = {};
+            
+            resultados.forEach(hit => {
+                const source = hit._source || {};
+                
+                // Contar años
+                const anio = source.año || source.anio;
+                if (anio) {
+                    anios[anio] = (anios[anio] || 0) + 1;
+                }
+                
+                // Contar tipos
+                const tipo = source.tipo_documento || source.tipo;
+                if (tipo) {
+                    tipos[tipo] = (tipos[tipo] || 0) + 1;
+                }
+            });
+            
+            return { anios, tipos };
+        }
+
+        // Función para actualizar la lista de años
+        function actualizarListaAnios(anios) {
+            const listAnio = document.getElementById('listDocumentosPorAnio');
+            if (!listAnio) return;
+            
+            listAnio.innerHTML = '';
+            
+            // Ordenar años
+            const aniosOrdenados = Object.keys(anios).sort((a, b) => b - a);
+            
+            aniosOrdenados.forEach(anio => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${anio}</span><span class="aggs-badge">${anios[anio]}</span>`;
+                li.setAttribute('data-anio', anio);
+                li.onclick = () => filtrarPorAnio(anio);
+                if (filtrosActivos.anio == anio) {
+                    li.classList.add('active');
+                }
+                listAnio.appendChild(li);
+            });
+        }
+
+        // Función para actualizar la lista de tipos
+        function actualizarListaTipos(tipos) {
+            const listTipo = document.getElementById('listDocumentosPorTipo');
+            if (!listTipo) return;
+            
+            listTipo.innerHTML = '';
+            
+            // Ordenar tipos por cantidad (descendente)
+            const tiposOrdenados = Object.keys(tipos).sort((a, b) => tipos[b] - tipos[a]);
+            
+            tiposOrdenados.forEach(tipo => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${tipo}</span><span class="aggs-badge">${tipos[tipo]}</span>`;
+                li.setAttribute('data-tipo', tipo);
+                li.onclick = () => filtrarPorTipo(tipo);
+                if (filtrosActivos.tipo == tipo) {
+                    li.classList.add('active');
+                }
+                listTipo.appendChild(li);
+            });
+        }
+    </script>
+
+    <!-- Modal para mostrar detalle completo -->
+    <div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetalleLabel">Detalle del Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalDetalleBody">
+                    <!-- El contenido se mostrará aquí -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

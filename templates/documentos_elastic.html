@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Documentos a Elastic - BigData</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .page-title i {
+            font-size: 2rem;
+        }
+        .step-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .step-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 108, 103, 0.15);
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+        .method-option {
+            padding: 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        .method-option:hover {
+            border-color: var(--primary);
+            background: rgba(0, 108, 103, 0.05);
+            transform: translateX(4px);
+        }
+        .method-option input:checked ~ label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .method-option input:checked {
+            accent-color: var(--primary);
+        }
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(0, 108, 103, 0.1), rgba(0, 168, 150, 0.1));
+            border-radius: 12px;
+            margin-right: 1rem;
+        }
+        .icon-badge i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(0, 168, 150, 0.02);
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(0, 168, 150, 0.05);
+        }
+        .upload-zone i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        .table-modern {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .table-modern thead {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .table-modern tbody tr {
+            transition: background 0.2s ease;
+        }
+        .table-modern tbody tr:hover {
+            background: rgba(0, 168, 150, 0.05);
+        }
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .spinner-custom {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(0, 108, 103, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius);
+            padding: 2rem;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <header class="uc-header">
+        <div class="container">
+            <div class="header-inner">
+                <div class="brand">
+                    <i class="bi bi-database-fill-gear" style="font-size: 1.8rem; color: var(--primary);"></i>
+                    <span class="brand-text">BigData <span style="color: var(--muted); font-weight: 500;">[{{ usuario }}]</span></span>
+                </div>
+                <nav class="nav">
+                    <a class="nav-link" href="/admin"><i class="bi bi-arrow-left-circle"></i> Admin</a>
+                    <a class="nav-link" href="/"><i class="bi bi-box-arrow-right"></i> Salir</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title fade-in">
+                <i class="bi bi-cloud-upload-fill"></i>
+                Cargar Documentos a ElasticSearch
+            </h1>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom: 3rem;">
+
+        <!-- Selección de índice -->
+        <div class="card step-card fade-in">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center">
+                    <span class="step-number">1</span>
+                    Seleccionar Índice de Destino
+                </h5>
+                <div class="d-flex align-items-start mt-3">
+                    <div class="icon-badge">
+                        <i class="bi bi-server"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <label for="select_index" class="form-label fw-semibold">Índice de ElasticSearch</label>
+                        <select class="form-select form-select-lg" id="select_index" name="select_index" style="border-radius: 12px;">
+                            <option value="">🔄 Cargando índices...</option>
+                        </select>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i> Selecciona el índice donde se almacenarán los documentos
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selección de método -->
+        <div class="card step-card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center mb-4">
+                    <span class="step-number">2</span>
+                    Seleccionar Método de Carga
+                </h5>
+                
+                <div class="method-option">
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input" type="radio" name="metodo_carga" id="radio_zip" value="zip" checked style="width: 1.3rem; height: 1.3rem;">
+                        <div class="icon-badge ms-3">
+                            <i class="bi bi-file-zip-fill"></i>
+                        </div>
+                        <label class="form-check-label flex-grow-1" for="radio_zip" style="cursor: pointer;">
+                            <div class="fw-bold" style="font-size: 1.1rem;">ZIP con JSON</div>
+                            <small class="text-muted">Cargar archivos JSON comprimidos en formato ZIP</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="method-option">
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input" type="radio" name="metodo_carga" id="radio_webscraping" value="webscraping" style="width: 1.3rem; height: 1.3rem;">
+                        <div class="icon-badge ms-3">
+                            <i class="bi bi-globe2"></i>
+                        </div>
+                        <label class="form-check-label flex-grow-1" for="radio_webscraping" style="cursor: pointer;">
+                            <div class="fw-bold" style="font-size: 1.1rem;">Web Scraping</div>
+                            <small class="text-muted">Extraer y procesar documentos directamente desde la web</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opciones ZIP -->
+        <div class="card step-card fade-in" id="opciones_zip" style="animation-delay: 0.2s;">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center mb-4">
+                    <span class="step-number">3</span>
+                    Cargar Archivo ZIP
+                </h5>
+                
+                <div class="upload-zone">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    <h5 class="fw-bold mb-2">Arrastra tu archivo aquí</h5>
+                    <p class="text-muted mb-3">o haz clic para seleccionar</p>
+                    <input type="file" class="form-control" id="file_zip" accept=".zip" 
+                           style="max-width: 400px; margin: 0 auto; border-radius: 12px;">
+                    <small class="d-block mt-3 text-muted">
+                        <i class="bi bi-info-circle-fill"></i> El archivo ZIP debe contener archivos .json
+                    </small>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-primary btn-lg" onclick="procesarZip()" 
+                            style="border-radius: 12px; padding: 0.75rem 2rem;">
+                        <i class="bi bi-upload"></i> Procesar Archivo ZIP
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opciones WebScraping -->
+        <div class="card step-card fade-in" id="opciones_webscraping" style="display: none; animation-delay: 0.2s;">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center mb-4">
+                    <span class="step-number">3</span>
+                    Configurar Web Scraping
+                </h5>
+                
+                <div class="d-flex align-items-start mb-4">
+                    <div class="icon-badge">
+                        <i class="bi bi-link-45deg"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <label for="url_webscraping" class="form-label fw-semibold">URL para Web Scraping</label>
+                        <input type="url" class="form-control form-control-lg" id="url_webscraping" 
+                               placeholder="https://ejemplo.com/pagina" style="border-radius: 12px;">
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i> URL inicial desde donde se extraerán los enlaces
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="icon-badge">
+                                <i class="bi bi-tags-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="extensiones_navegar" class="form-label fw-semibold">Extensiones a Navegar</label>
+                                <input type="text" class="form-control" id="extensiones_navegar" 
+                                       placeholder="aspx, php" value="aspx" style="border-radius: 12px;">
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle"></i> Ej: aspx, php, html
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="icon-badge">
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="tipos_archivos" class="form-label fw-semibold">Tipos de Archivos</label>
+                                <input type="text" class="form-control" id="tipos_archivos" 
+                                       placeholder="pdf, txt" value="pdf" style="border-radius: 12px;">
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle"></i> Ej: pdf, txt, doc
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-primary btn-lg" onclick="procesarWebScraping()" 
+                            style="border-radius: 12px; padding: 0.75rem 2rem;">
+                        <i class="bi bi-download"></i> Iniciar Web Scraping
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados y tabla de archivos -->
+        <div id="seccion_resultados" style="display: none;">
+            <div class="card step-card fade-in" style="animation-delay: 0.3s;">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center mb-4">
+                        <span class="step-number">4</span>
+                        Archivos Procesados
+                    </h5>
+                    
+                    <div id="info_resultados" class="alert alert-info mb-4" 
+                         style="border-radius: 12px; border-left: 4px solid var(--primary);">
+                        <i class="bi bi-info-circle-fill"></i> <span id="info_texto"></span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <div class="form-check" style="font-size: 1.05rem;">
+                            <input class="form-check-input" type="checkbox" id="seleccionar_todos" 
+                                   onchange="toggleSeleccionarTodos()" style="width: 1.2rem; height: 1.2rem;">
+                            <label class="form-check-label fw-semibold" for="seleccionar_todos">
+                                <i class="bi bi-check-square"></i> Seleccionar Todos
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-success btn-lg pulse-animation" 
+                                id="btn_cargar_seleccionados" onclick="cargarSeleccionados()"
+                                style="border-radius: 12px; padding: 0.75rem 2rem;">
+                            <i class="bi bi-cloud-upload-fill"></i> 
+                            <span id="texto_boton_cargar">Cargar Seleccionados</span>
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th width="60" class="text-center">
+                                        <input type="checkbox" id="check_header" onchange="toggleSeleccionarTodos()" 
+                                               style="width: 1.1rem; height: 1.1rem;">
+                                    </th>
+                                    <th><i class="bi bi-file-earmark"></i> Archivo</th>
+                                    <th><i class="bi bi-tag"></i> Tipo</th>
+                                    <th><i class="bi bi-hdd"></i> Tamaño</th>
+                                    <th><i class="bi bi-activity"></i> Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla_archivos">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de carga -->
+        <div id="div_cargando" class="text-center mt-5" style="display: none;">
+            <div class="card loading-overlay mx-auto" style="max-width: 500px;">
+                <div class="card-body">
+                    <div class="spinner-custom mx-auto mb-3"></div>
+                    <h5 class="fw-bold mb-2" id="mensaje_cargando">Procesando su solicitud...</h5>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-clock"></i> Por favor espere un momento
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 pb-4">
+        <div style="color: var(--muted); font-size: 0.9rem;">
+            <p class="mb-1">
+                <i class="bi bi-code-slash"></i> Creado por <strong style="color: var(--primary);">{{ creador }}</strong>
+            </p>
+            <p class="mb-1" id="current-year"></p>
+            <p class="mb-0">
+                <span class="badge badge-custom" style="background: var(--glass); color: var(--primary); border: 1px solid var(--border);" 
+                      id="version_app">{{ version }}</span>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq4cvVmFh9vju3MXgpoK" crossorigin="anonymous"></script>
+    <script>
+        // Variables globales
+        let archivosActuales = [];
+        let metodoActual = 'zip';
+
+        // Inicializar año
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Cargar índices al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarIndices();
+            configurarRadioButtons();
+            aplicarAnimaciones();
+        });
+
+        // Configurar comportamiento de radio buttons
+        function configurarRadioButtons() {
+            document.querySelectorAll('input[name="metodo_carga"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'zip') {
+                        document.getElementById('opciones_zip').style.display = 'block';
+                        document.getElementById('opciones_webscraping').style.display = 'none';
+                        metodoActual = 'zip';
+                    } else {
+                        document.getElementById('opciones_zip').style.display = 'none';
+                        document.getElementById('opciones_webscraping').style.display = 'block';
+                        metodoActual = 'webscraping';
+                    }
+                    // Ocultar resultados al cambiar método
+                    document.getElementById('seccion_resultados').style.display = 'none';
+                });
+            });
+        }
+
+        // Aplicar animaciones
+        function aplicarAnimaciones() {
+            const cards = document.querySelectorAll('.step-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+        }
+
+        // Cargar lista de índices
+        function cargarIndices() {
+            fetch('/listar-indices-elastic')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('select_index');
+                    select.innerHTML = '<option value="">📊 Seleccione un índice</option>';
+                    
+                    data.forEach(indice => {
+                        const option = document.createElement('option');
+                        option.value = indice.nombre;
+                        option.textContent = `📁 ${indice.nombre} (${indice.total_documentos} docs)`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('select_index').innerHTML = '<option value="">❌ Error al cargar índices</option>';
+                });
+        }
+
+        // Procesar archivo ZIP
+        function procesarZip() {
+            const fileInput = document.getElementById('file_zip');
+            const selectIndex = document.getElementById('select_index');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Por favor, seleccione un archivo ZIP');
+                return;
+            }
+            
+            if (!selectIndex.value) {
+                alert('Por favor, seleccione un índice de destino');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('index', selectIndex.value);
+            
+            mostrarCargando('Procesando archivo ZIP...');
+            
+            fetch('/procesar-zip-elastic', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                ocultarCargando();
+                
+                if (data.success) {
+                    archivosActuales = data.archivos;
+                    mostrarResultados(data);
+                } else {
+                    alert('Error: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                ocultarCargando();
+                console.error('Error:', error);
+                alert('Error al procesar ZIP');
+            });
+        }
+
+        // Procesar Web Scraping
+        function procesarWebScraping() {
+            const url = document.getElementById('url_webscraping').value.trim();
+            const extensionesNavegar = document.getElementById('extensiones_navegar').value.trim();
+            const tiposArchivos = document.getElementById('tipos_archivos').value.trim();
+            const selectIndex = document.getElementById('select_index');
+            
+            if (!url) {
+                alert('Por favor, ingrese una URL');
+                return;
+            }
+            
+            if (!selectIndex.value) {
+                alert('Por favor, seleccione un índice de destino');
+                return;
+            }
+            
+            mostrarCargando('Realizando Web Scraping... Esto puede tardar varios minutos.');
+            
+            fetch('/procesar-webscraping-elastic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    extensiones_navegar: extensionesNavegar,
+                    tipos_archivos: tiposArchivos,
+                    index: selectIndex.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                ocultarCargando();
+                
+                if (data.success) {
+                    archivosActuales = data.archivos;
+                    mostrarResultados(data);
+                } else {
+                    alert('Error: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                ocultarCargando();
+                console.error('Error:', error);
+                alert('Error al procesar Web Scraping');
+            });
+        }
+
+        // Mostrar resultados
+        function mostrarResultados(data) {
+            const seccionResultados = document.getElementById('seccion_resultados');
+            seccionResultados.style.display = 'block';
+            
+            let infoTexto = `📦 Total de archivos: <strong>${data.archivos.length}</strong>`;
+            if (data.mensaje) {
+                infoTexto += ` | ${data.mensaje}`;
+            }
+            document.getElementById('info_resultados').innerHTML = infoTexto;
+            
+            // Actualizar texto del botón según método
+            if (metodoActual === 'webscraping') {
+                document.getElementById('texto_boton_cargar').innerHTML = '<i class="bi bi-magic"></i> PLN/Cargar Seleccionados';
+            } else {
+                document.getElementById('texto_boton_cargar').innerHTML = 'Cargar Seleccionados';
+            }
+            
+            const tbody = document.getElementById('tabla_archivos');
+            tbody.innerHTML = '';
+            
+            data.archivos.forEach((archivo, index) => {
+                const row = document.createElement('tr');
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                
+                const iconoExtension = getIconoExtension(archivo.extension || 'json');
+                
+                row.innerHTML = `
+                    <td class="text-center">
+                        <input type="checkbox" class="archivo-checkbox" data-index="${index}" checked 
+                               style="width: 1.1rem; height: 1.1rem;">
+                    </td>
+                    <td>
+                        <i class="${iconoExtension}" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                        <strong>${archivo.nombre}</strong>
+                    </td>
+                    <td><span class="badge badge-custom" style="background: var(--secondary); color: white;">${archivo.extension || 'json'}</span></td>
+                    <td>${formatearTamaño(archivo.tamaño || 0)}</td>
+                    <td><span class="badge badge-custom" style="background: #FFA500; color: white;">⏳ Pendiente</span></td>
+                `;
+                tbody.appendChild(row);
+                
+                setTimeout(() => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateX(0)';
+                }, index * 50);
+            });
+            
+            // Scroll a resultados con animación
+            setTimeout(() => {
+                seccionResultados.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 200);
+        }
+        
+        // Obtener icono según extensión
+        function getIconoExtension(extension) {
+            const iconos = {
+                'json': 'bi bi-file-code-fill',
+                'pdf': 'bi bi-file-pdf-fill',
+                'txt': 'bi bi-file-text-fill',
+                'doc': 'bi bi-file-word-fill',
+                'docx': 'bi bi-file-word-fill',
+                'xls': 'bi bi-file-excel-fill',
+                'xlsx': 'bi bi-file-excel-fill'
+            };
+            return iconos[extension.toLowerCase()] || 'bi bi-file-earmark-fill';
+        }
+
+        // Cargar archivos seleccionados a Elastic
+        function cargarSeleccionados() {
+            const checkboxes = document.querySelectorAll('.archivo-checkbox:checked');
+            if (checkboxes.length === 0) {
+                mostrarNotificacion('⚠️ Por favor, seleccione al menos un archivo', 'warning');
+                return;
+            }
+            
+            const selectIndex = document.getElementById('select_index');
+            if (!selectIndex.value) {
+                mostrarNotificacion('⚠️ Por favor, seleccione un índice de destino', 'warning');
+                return;
+            }
+            
+            const indicesSeleccionados = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+            const archivosSeleccionados = indicesSeleccionados.map(i => archivosActuales[i]);
+            
+            mostrarCargando('🚀 Cargando documentos a ElasticSearch...');
+            
+            fetch('/cargar-documentos-elastic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    archivos: archivosSeleccionados,
+                    index: selectIndex.value,
+                    metodo: metodoActual
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                ocultarCargando();
+                
+                if (data.success) {
+                    mostrarNotificacion(
+                        `✅ Carga completada exitosamente<br>📊 Documentos indexados: <strong>${data.indexados}</strong><br>❌ Errores: <strong>${data.errores}</strong>`,
+                        'success'
+                    );
+                    
+                    // Actualizar estado en la tabla con animación
+                    checkboxes.forEach((cb, idx) => {
+                        setTimeout(() => {
+                            const row = cb.closest('tr');
+                            const badge = row.querySelector('td:last-child span');
+                            badge.className = 'badge badge-custom';
+                            badge.style.background = '#28a745';
+                            badge.style.color = 'white';
+                            badge.innerHTML = '✓ Cargado';
+                            cb.disabled = true;
+                            row.style.background = 'rgba(40, 167, 69, 0.05)';
+                        }, idx * 100);
+                    });
+                    
+                    // Recargar lista de índices para actualizar contadores
+                    cargarIndices();
+                } else {
+                    mostrarNotificacion('❌ Error al cargar documentos: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            })
+            .catch(error => {
+                ocultarCargando();
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error al cargar documentos', 'error');
+            });
+        }
+        
+        // Mostrar notificación personalizada
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const colores = {
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107',
+                'info': '#17a2b8'
+            };
+            
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                color: ${colores[tipo]};
+                padding: 1.5rem 2rem;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                z-index: 9999;
+                border-left: 4px solid ${colores[tipo]};
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+            `;
+            notif.innerHTML = mensaje;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }, 4000);
+        }
+
+        // Toggle seleccionar todos
+        function toggleSeleccionarTodos() {
+            const checkHeader = document.getElementById('check_header');
+            const checkTodos = document.getElementById('seleccionar_todos');
+            const checkboxes = document.querySelectorAll('.archivo-checkbox:not(:disabled)');
+            
+            // Sincronizar ambos checkboxes
+            if (checkHeader && checkTodos) {
+                checkHeader.checked = checkTodos.checked;
+                checkTodos.checked = checkHeader.checked;
+            }
+            
+            const estado = checkHeader ? checkHeader.checked : checkTodos.checked;
+            checkboxes.forEach(cb => cb.checked = estado);
+        }
+
+        // Formatear tamaño de archivo
+        function formatearTamaño(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Mostrar/ocultar spinner de carga
+        function mostrarCargando(mensaje) {
+            document.getElementById('mensaje_cargando').innerHTML = mensaje;
+            const divCargando = document.getElementById('div_cargando');
+            divCargando.style.display = 'block';
+            divCargando.style.animation = 'fadeIn 0.3s ease';
+        }
+
+        function ocultarCargando() {
+            const divCargando = document.getElementById('div_cargando');
+            divCargando.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                divCargando.style.display = 'none';
+            }, 300);
+        }
+        
+        // Agregar efectos hover a las tarjetas
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.step-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.borderLeftWidth = '6px';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.borderLeftWidth = '4px';
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</body>
+</html>

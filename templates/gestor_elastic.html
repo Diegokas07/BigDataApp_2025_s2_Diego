@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de ElasticSearch - BigData</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .page-title i {
+            font-size: 2rem;
+        }
+        .section-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 108, 103, 0.15);
+        }
+        .query-result {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+        .json-view {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .radio-option {
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        .radio-option:hover {
+            border-color: var(--primary);
+            background: rgba(0, 108, 103, 0.05);
+            transform: translateY(-2px);
+        }
+        .radio-option input:checked ~ label {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .table-modern {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .table-modern thead {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .table-modern tbody tr {
+            transition: all 0.2s ease;
+        }
+        .table-modern tbody tr:hover {
+            background: rgba(0, 168, 150, 0.05);
+            transform: scale(1.01);
+        }
+        .health-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .health-green {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        .health-yellow {
+            background: linear-gradient(135deg, #ffc107, #ffca2c);
+            color: #000;
+        }
+        .health-red {
+            background: linear-gradient(135deg, #dc3545, #e55353);
+            color: white;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner-custom {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(0, 108, 103, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .code-editor {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border: 2px solid var(--border);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(0, 108, 103, 0.1), rgba(0, 168, 150, 0.1));
+            border-radius: 12px;
+            margin-right: 1rem;
+        }
+        .icon-badge i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <header class="uc-header">
+        <div class="container">
+            <div class="header-inner">
+                <div class="brand">
+                    <i class="bi bi-search-heart" style="font-size: 1.8rem; color: var(--primary);"></i>
+                    <span class="brand-text">BigData <span style="color: var(--muted); font-weight: 500;">[{{ usuario }}]</span></span>
+                </div>
+                <nav class="nav">
+                    <a class="nav-link" href="/admin"><i class="bi bi-arrow-left-circle"></i> Admin</a>
+                    <a class="nav-link" href="/"><i class="bi bi-box-arrow-right"></i> Salir</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title fade-in">
+                <i class="bi bi-gear-wide-connected"></i>
+                Gestión de ElasticSearch
+            </h1>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom: 3rem;">
+
+        <!-- Tabla de índices -->
+        <div class="card section-card fade-in">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-badge">
+                        <i class="bi bi-database-fill"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold" style="font-size: 1.3rem;">Índices de ElasticSearch</h5>
+                    <button class="btn btn-sm btn-outline ms-auto" onclick="cargarIndices()" style="border-radius: 10px;">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-tag"></i> Nombre del Índice</th>
+                                <th><i class="bi bi-file-text"></i> Documentos</th>
+                                <th><i class="bi bi-hdd"></i> Tamaño</th>
+                                <th><i class="bi bi-heart-pulse"></i> Salud</th>
+                                <th><i class="bi bi-toggle-on"></i> Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaIndices">
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="spinner-custom"></div>
+                                    <p class="mt-2 mb-0">Cargando índices...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de consultas -->
+        <div class="card section-card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-badge">
+                        <i class="bi bi-code-slash"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold" style="font-size: 1.3rem;">Ejecutar Consulta o Comando</h5>
+                </div>
+                
+                <form id="formElasticQuery">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-3" style="font-size: 1.05rem;">
+                            <i class="bi bi-sliders"></i> Tipo de Operación
+                        </label>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <div class="radio-option">
+                                <input class="form-check-input" type="radio" name="tipo_operacion" id="radioQuery" value="QUERY" checked style="width: 1.2rem; height: 1.2rem;">
+                                <label class="form-check-label ms-2" for="radioQuery" style="cursor: pointer;">
+                                    <i class="bi bi-search"></i> <strong>QUERY</strong>
+                                    <small class="d-block text-muted">Consultas de búsqueda</small>
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input class="form-check-input" type="radio" name="tipo_operacion" id="radioDML" value="DML" style="width: 1.2rem; height: 1.2rem;">
+                                <label class="form-check-label ms-2" for="radioDML" style="cursor: pointer;">
+                                    <i class="bi bi-pencil-square"></i> <strong>DML</strong>
+                                    <small class="d-block text-muted">Comandos de modificación</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="queryTextarea" class="form-label fw-semibold" style="font-size: 1.05rem;">
+                            <i class="bi bi-file-code"></i> Query/Comando (JSON)
+                        </label>
+                        <textarea class="code-editor" id="queryTextarea" name="query" rows="12" required 
+                                  placeholder='Ejemplo QUERY:&#10;{&#10;  "index": "nombre_indice",&#10;  "query": {&#10;    "match_all": {}&#10;  }&#10;}&#10;&#10;Ejemplo DML:&#10;{&#10;  "operacion": "index",&#10;  "index": "nombre_indice",&#10;  "id": "1",&#10;  "documento": {&#10;    "campo": "valor"&#10;  }&#10;}'></textarea>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i> Ingrese un JSON válido con la estructura correspondiente
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex gap-3 justify-content-end">
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="limpiarFormulario()" style="border-radius: 12px;">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg pulse-animation" onclick="ejecutarComando()" style="border-radius: 12px;">
+                            <i class="bi bi-play-circle-fill"></i> Ejecutar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resultados de QUERY -->
+        <div id="divResultadosQuery" style="display: none;">
+            <div class="card section-card fade-in" style="animation-delay: 0.2s;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-badge">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold" style="font-size: 1.3rem;">Resultados de la Consulta</h5>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <!-- Columna 1: Aggregations -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-pie-chart-fill" style="font-size: 1.5rem; color: var(--primary); margin-right: 0.75rem;"></i>
+                                <h6 class="mb-0 fw-bold">Aggregations</h6>
+                            </div>
+                            <div id="divAggregations" class="json-view query-result">
+                                <i class="bi bi-info-circle"></i> No hay aggregations en esta consulta
+                            </div>
+                        </div>
+                        <!-- Columna 2: Hits -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-list-check" style="font-size: 1.5rem; color: var(--primary); margin-right: 0.75rem;"></i>
+                                <h6 class="mb-0 fw-bold">Resultados (Hits)</h6>
+                                <span class="badge health-badge health-green ms-auto">
+                                    <i class="bi bi-check-circle"></i> Total: <span id="totalHits">0</span>
+                                </span>
+                            </div>
+                            <div class="table-responsive query-result">
+                                <table class="table table-modern table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Índice</th>
+                                            <th>Score</th>
+                                            <th>Datos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaHits">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados de DML -->
+        <div id="divResultadosDML" style="display: none;">
+            <div class="card section-card fade-in" style="animation-delay: 0.2s;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-badge">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold" style="font-size: 1.3rem;">Resultado del Comando DML</h5>
+                    </div>
+                    <div id="divResultadoDML" class="json-view">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de carga -->
+        <div id="div_cargando" class="text-center mt-5" style="display: none;">
+            <div class="card mx-auto" style="max-width: 500px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-radius: var(--radius); padding: 2rem;">
+                <div class="card-body">
+                    <div class="spinner-custom mx-auto mb-3"></div>
+                    <h5 class="fw-bold mb-2">⚡ Procesando su solicitud...</h5>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-clock"></i> Por favor espere un momento
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 pb-4">
+        <div style="color: var(--muted); font-size: 0.9rem;">
+            <p class="mb-1">
+                <i class="bi bi-code-slash"></i> Creado por <strong style="color: var(--primary);">{{ creador }}</strong>
+            </p>
+            <p class="mb-1" id="current-year"></p>
+            <p class="mb-0">
+                <span class="badge" style="background: var(--glass); color: var(--primary); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600;" 
+                      id="version_app">{{ version }}</span>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq4cvVmFh9vju3MXgpoK" crossorigin="anonymous"></script>
+    <script>
+        // Inicializar año
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Cargar índices al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarIndices();
+            aplicarAnimaciones();
+        });
+        
+        // Aplicar animaciones
+        function aplicarAnimaciones() {
+            const cards = document.querySelectorAll('.section-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+            
+            // Efectos hover en las tarjetas
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.borderLeftWidth = '6px';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.borderLeftWidth = '4px';
+                });
+            });
+        }
+        
+        // Mostrar notificación personalizada
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const colores = {
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107',
+                'info': '#17a2b8'
+            };
+            
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                color: ${colores[tipo]};
+                padding: 1.5rem 2rem;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                z-index: 9999;
+                border-left: 4px solid ${colores[tipo]};
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+            `;
+            notif.innerHTML = mensaje;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }, 4000);
+        }
+
+        // Función para cargar y mostrar índices
+        function cargarIndices() {
+            document.getElementById('div_cargando').style.display = 'block';
+            
+            fetch('/listar-indices-elastic')
+                .then(response => response.json())
+                .then(data => {
+                    const tablaIndices = document.getElementById('tablaIndices');
+                    tablaIndices.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        tablaIndices.innerHTML = '<tr><td colspan="5" class="text-center">No hay índices disponibles</td></tr>';
+                    } else {
+                        data.forEach((indice, index) => {
+                            const row = document.createElement('tr');
+                            
+                            // Badge para salud
+                            let saludBadge = '';
+                            const salud = indice.salud || 'unknown';
+                            if (salud === 'green') {
+                                saludBadge = '<span class="health-badge health-green"><i class="bi bi-heart-fill"></i> Verde</span>';
+                            } else if (salud === 'yellow') {
+                                saludBadge = '<span class="health-badge health-yellow"><i class="bi bi-exclamation-triangle-fill"></i> Amarillo</span>';
+                            } else if (salud === 'red') {
+                                saludBadge = '<span class="health-badge health-red"><i class="bi bi-x-circle-fill"></i> Rojo</span>';
+                            } else {
+                                saludBadge = '<span class="badge" style="background: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 20px;"><i class="bi bi-question-circle"></i> Desconocido</span>';
+                            }
+                            
+                            // Badge para estado
+                            let estadoBadge = '';
+                            const estado = indice.estado || 'unknown';
+                            if (estado === 'open') {
+                                estadoBadge = '<span class="badge" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600;"><i class="bi bi-unlock-fill"></i> Abierto</span>';
+                            } else {
+                                estadoBadge = '<span class="badge" style="background: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600;"><i class="bi bi-lock-fill"></i> Cerrado</span>';
+                            }
+                            
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-20px)';
+                            
+                            row.innerHTML = `
+                                <td>
+                                    <i class="bi bi-folder2-open" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                                    <strong>${indice.nombre || ''}</strong>
+                                </td>
+                                <td><i class="bi bi-file-earmark-text" style="color: var(--secondary); margin-right: 0.5rem;"></i>${indice.total_documentos || 0}</td>
+                                <td><i class="bi bi-database" style="color: var(--muted); margin-right: 0.5rem;"></i>${indice.tamaño || '0b'}</td>
+                                <td>${saludBadge}</td>
+                                <td>${estadoBadge}</td>
+                            `;
+                            
+                            tablaIndices.appendChild(row);
+                            
+                            setTimeout(() => {
+                                row.style.transition = 'all 0.3s ease';
+                                row.style.opacity = '1';
+                                row.style.transform = 'translateX(0)';
+                            }, index * 50);
+                        });
+                    }
+                    
+                    document.getElementById('div_cargando').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar la lista de índices');
+                    document.getElementById('div_cargando').style.display = 'none';
+                });
+        }
+
+        // Función para ejecutar comando
+        function ejecutarComando() {
+            const tipoOperacion = document.querySelector('input[name="tipo_operacion"]:checked').value;
+            const queryText = document.getElementById('queryTextarea').value.trim();
+            
+            if (!queryText) {
+                mostrarNotificacion('⚠️ Por favor, ingrese una query o comando', 'warning');
+                return;
+            }
+            
+            // Validar que sea JSON válido
+            try {
+                JSON.parse(queryText);
+            } catch (e) {
+                mostrarNotificacion('❌ Error: El texto ingresado no es un JSON válido.<br>' + e.message, 'error');
+                return;
+            }
+            
+            document.getElementById('div_cargando').style.display = 'block';
+            document.getElementById('divResultadosQuery').style.display = 'none';
+            document.getElementById('divResultadosDML').style.display = 'none';
+            
+            if (tipoOperacion === 'QUERY') {
+                ejecutarQuery(queryText);
+            } else if (tipoOperacion === 'DML') {
+                ejecutarDML(queryText);
+            }
+        }
+
+        // Función para ejecutar QUERY
+        function ejecutarQuery(queryText) {
+            fetch('/ejecutar-query-elastic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: queryText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('div_cargando').style.display = 'none';
+                
+                if (data.success) {
+                    mostrarNotificacion('✅ Query ejecutada exitosamente', 'success');
+                    
+                    // Mostrar resultados
+                    const divResultados = document.getElementById('divResultadosQuery');
+                    divResultados.style.display = 'block';
+                    
+                    // Scroll suave
+                    setTimeout(() => {
+                        divResultados.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 200);
+                    
+                    // Mostrar total de hits
+                    document.getElementById('totalHits').textContent = data.total || 0;
+                    
+                    // Mostrar aggregations si existen
+                    const divAggs = document.getElementById('divAggregations');
+                    if (data.aggs && Object.keys(data.aggs).length > 0) {
+                        divAggs.textContent = JSON.stringify(data.aggs, null, 2);
+                    } else {
+                        divAggs.innerHTML = '<i class="bi bi-info-circle"></i> No hay aggregations en esta consulta';
+                    }
+                    
+                    // Mostrar hits en tabla
+                    const tablaHits = document.getElementById('tablaHits');
+                    tablaHits.innerHTML = '';
+                    
+                    if (data.hits && data.hits.length > 0) {
+                        data.hits.forEach((hit, index) => {
+                            const row = document.createElement('tr');
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-20px)';
+                            const source = hit._source || {};
+                            
+                            row.innerHTML = `
+                                <td><strong>${hit._id || ''}</strong></td>
+                                <td><span class="badge" style="background: var(--secondary); color: white;">${hit._index || ''}</span></td>
+                                <td><span class="badge" style="background: var(--accent); color: white;">${hit._score ? hit._score.toFixed(4) : 'N/A'}</span></td>
+                                <td><pre class="mb-0" style="font-size: 0.75rem; max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 0.5rem; border-radius: 8px;">${JSON.stringify(source, null, 2)}</pre></td>
+                            `;
+                            tablaHits.appendChild(row);
+                            
+                            setTimeout(() => {
+                                row.style.transition = 'all 0.3s ease';
+                                row.style.opacity = '1';
+                                row.style.transform = 'translateX(0)';
+                            }, index * 50);
+                        });
+                    } else {
+                        tablaHits.innerHTML = '<tr><td colspan="4" class="text-center"><i class="bi bi-inbox"></i> No hay resultados</td></tr>';
+                    }
+                } else {
+                    mostrarNotificacion('❌ Error al ejecutar la query: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('div_cargando').style.display = 'none';
+                mostrarNotificacion('❌ Error al ejecutar la query', 'error');
+            });
+        }
+
+        // Función para ejecutar DML
+        function ejecutarDML(queryText) {
+            fetch('/ejecutar-dml-elastic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ comando: queryText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('div_cargando').style.display = 'none';
+                
+                if (data.success) {
+                    mostrarNotificacion('✅ Comando DML ejecutado exitosamente', 'success');
+                    
+                    // Mostrar resultados
+                    const divResultados = document.getElementById('divResultadosDML');
+                    divResultados.style.display = 'block';
+                    const divResultado = document.getElementById('divResultadoDML');
+                    divResultado.textContent = JSON.stringify(data.data, null, 2);
+                    
+                    // Scroll suave
+                    setTimeout(() => {
+                        divResultados.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 200);
+                    
+                    // Recargar índices para actualizar conteos
+                    setTimeout(() => {
+                        cargarIndices();
+                    }, 1000);
+                } else {
+                    mostrarNotificacion('❌ Error al ejecutar el comando DML: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('div_cargando').style.display = 'none';
+                mostrarNotificacion('❌ Error al ejecutar el comando DML', 'error');
+            });
+        }
+
+        // Función para limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('queryTextarea').value = '';
+            document.getElementById('divResultadosQuery').style.display = 'none';
+            document.getElementById('divResultadosDML').style.display = 'none';
+            mostrarNotificacion('🧹 Formulario limpiado', 'info');
+        }
+    </script>
+    
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    </style>
+</body>
+</html>
+

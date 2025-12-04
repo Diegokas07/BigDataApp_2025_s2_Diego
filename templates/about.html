@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de - BigData-MiProyecto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #006C67 0%, #00A896 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 1.5rem;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero-section h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero-section .lead {
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 108, 103, 0.2);
+        }
+        
+        .info-card h3 {
+            color: #006C67;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .info-card h3 i {
+            font-size: 1.5rem;
+            color: #00A896;
+        }
+        
+        .info-card p {
+            color: #64748B;
+            line-height: 1.6;
+            text-align: justify;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li i {
+            color: #00A896;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        
+        .feature-list li span {
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        .tech-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #006C67 0%, #00A896 100%);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 25px;
+            margin: 0.3rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .creator-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #00A896;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 108, 103, 0.3);
+        }
+        
+        .creator-section h4 {
+            color: #006C67;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+        }
+        
+        .creator-section p {
+            color: #64748B;
+            margin-bottom: 0.2rem;
+            font-size: 0.85rem;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+        
+        .social-links .btn {
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.85rem;
+        }
+        
+        .social-links .btn-github {
+            background: #24292e;
+            color: white;
+        }
+        
+        .social-links .btn-github:hover {
+            background: #1a1e21;
+            transform: translateY(-2px);
+        }
+        
+        .social-links .btn-linkedin {
+            background: #0077b5;
+            color: white;
+        }
+        
+        .social-links .btn-linkedin:hover {
+            background: #005885;
+            transform: translateY(-2px);
+        }
+        
+        .social-links .btn-twitter {
+            background: #1DA1F2;
+            color: white;
+        }
+        
+        .social-links .btn-twitter:hover {
+            background: #0d8bd9;
+            transform: translateY(-2px);
+        }
+        
+        .icon-hero {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.5rem;
+        }
+        
+        .normograma-types {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .normograma-types h4 {
+            color: #006C67;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+        
+        .doc-type-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem;
+            margin-bottom: 0.4rem;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .doc-type-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0, 168, 150, 0.2);
+        }
+        
+        .doc-type-item i {
+            color: #00A896;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .doc-type-item span {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .tech-section {
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .main-container {
+            padding-bottom: 1rem;
+        }
+        
+        .content-wrapper {
+            min-height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tech-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            flex-grow: 1;
+            padding: 2rem 0;
+            width: 100%;
+        }
+        
+        .tech-badges-container {
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .normograma-types {
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="uc-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-bar-chart-fill me-2"></i>BigData-MiProyecto
+                </h1>
+                <nav>
+                    <ul class="nav">
+                        <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-fill me-1"></i>Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/buscador"><i class="bi bi-search me-1"></i>Buscador</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="/about"><i class="bi bi-info-circle-fill me-1"></i>Acerca de</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>Ingresar</a></li>                        
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero-section">
+        <div class="container text-center">
+            <i class="bi bi-book-half icon-hero"></i>
+            <h1>Normograma del Ministerio de Educación</h1>
+            <p class="bi">Análisis Inteligente de la Normativa Educativa Colombiana</p>
+        </div>
+    </div>
+
+    <div class="container main-container">
+        <div class="row">
+            <!-- Columna Izquierda -->
+            <div class="col-lg-6 mb-3">
+                <!-- Descripción del Normograma -->
+                <div class="info-card h-100">
+                    <h3><i class="bi bi-file-earmark-text"></i>¿Qué es el Normograma?</h3>
+                    <p>
+                        El Normograma es una compilación de las normas expedidas por el Ministerio de Educación Nacional y por otras entidades públicas 
+                        aplicables al sector Educación. En este encontrará <strong>Leyes, Decretos, Resoluciones, Directivas y Circulares</strong>, entre otros 
+                        documentos, en un formato que le permitirá su edición y le facilitará la búsqueda de textos y normas a través de hipervínculos. 
+                        De igual manera, en el Normograma podrá encontrar las normas con análisis de vigencia y concordancia.
+                    </p>
+                    
+                    <div class="normograma-types mt-4">
+                        <h4><i class="bi bi-files me-2"></i>Tipos de Documentos</h4>
+                        <div class="doc-type-item">
+                            <i class="bi bi-file-text"></i>
+                            <span>Leyes</span>
+                        </div>
+                        <div class="doc-type-item">
+                            <i class="bi bi-file-earmark-ruled"></i>
+                            <span>Decretos</span>
+                        </div>
+                        <div class="doc-type-item">
+                            <i class="bi bi-file-earmark-check"></i>
+                            <span>Resoluciones</span>
+                        </div>
+                        <div class="doc-type-item">
+                            <i class="bi bi-file-earmark-arrow-up"></i>
+                            <span>Directivas</span>
+                        </div>
+                        <div class="doc-type-item">
+                            <i class="bi bi-file-earmark-post"></i>
+                            <span>Circulares</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha -->
+            <div class="col-lg-6 mb-3">
+                <!-- Características del Proyecto -->
+                <div class="info-card h-100">
+                    <h3><i class="bi bi-gear-fill"></i>Características del Proyecto</h3>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-search"></i>
+                            <span><strong>Búsqueda Avanzada:</strong> Motor de búsqueda potenciado por ElasticSearch con análisis de texto completo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-funnel"></i>
+                            <span><strong>Filtros Inteligentes:</strong> Filtra por año de publicación y tipo de documento normativo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-database"></i>
+                            <span><strong>Big Data:</strong> Gestión eficiente de miles de documentos normativos con MongoDB</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-graph-up"></i>
+                            <span><strong>Análisis de Datos:</strong> Visualización de tendencias y estadísticas de la normativa educativa</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-link-45deg"></i>
+                            <span><strong>Trazabilidad:</strong> Análisis de concordancia entre normas mediante hipervínculos</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-shield-check"></i>
+                            <span><strong>Control de Acceso:</strong> Sistema de autenticación y permisos para gestión administrativa</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tecnologías (Ancho completo) -->
+        <div class="info-card">
+            <h3><i class="bi bi-cpu"></i>Tecnologías Utilizadas</h3>
+            <div class="tech-content">
+                <div class="tech-badges-container">
+                    <div class="mb-4">
+                        <span class="tech-badge"><i class="bi bi-filetype-py me-1"></i>Python Flask</span>
+                        <span class="tech-badge"><i class="bi bi-database-fill me-1"></i>MongoDB Atlas</span>
+                        <span class="tech-badge"><i class="bi bi-search me-1"></i>ElasticSearch</span>
+                    </div>
+                    <div>
+                        <span class="tech-badge"><i class="bi bi-bootstrap-fill me-1"></i>Bootstrap 5</span>
+                        <span class="tech-badge"><i class="bi bi-code-square me-1"></i>JavaScript</span>
+                        <span class="tech-badge"><i class="bi bi-file-earmark-code me-1"></i>HTML/CSS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creador -->
+        <div class="creator-section">
+            <img src="{{ url_for('static', filename='Images/mi_foto.png') }}" alt="Foto del creador" class="profile-img">
+            <h4><i class="bi bi-person-circle me-2"></i>Diego Armando Castillo Muñoz</h4>
+            <p><i class="bi bi-mortarboard-fill me-1"></i>Estudiante de Maestría en Analítica de Datos</p>
+            <p><i class="bi bi-building me-1"></i>Universidad Central</p>
+            <p><i class="bi bi-building me-1"></i>BigData 2025</p>
+            
+            <div class="social-links">
+                <a href="https://github.com/Diegokas07?tab=repositories" target="_blank" class="btn btn-github">
+                    <i class="bi bi-github me-1"></i>GitHub
+                </a>
+                <a href="https://www.linkedin.com/in/diego-castillo-527821309/" target="_blank" class="btn btn-linkedin">
+                    <i class="bi bi-linkedin me-1"></i>LinkedIn
+                </a>
+                <a href="https://x.com/DiegoCa23456840" target="_blank" class="btn btn-twitter">
+                    <i class="bi bi-twitter me-1"></i>Twitter
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-2 mt-3" style="background: linear-gradient(135deg, #006C67 0%, #00A896 100%); color: white; font-size: 0.85rem;">
+        <div class="container">
+            <p class="mb-1"><strong>Creado por {{ creador }}</strong></p>
+            <p class="mb-1"><i class="bi bi-calendar-event me-1"></i>{{ version }}</p>
+            <p class="mb-0 small"><i class="bi bi-c-circle me-1"></i>2025 - Universidad Central</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html> 

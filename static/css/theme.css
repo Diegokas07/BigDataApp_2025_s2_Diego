@@ -1,0 +1,168 @@
+/* ===== Variables de tema ===== */
+:root{
+  --bg-from:#E8F5F3;
+  --bg-to:#FFFFFF;
+  --text:#0F172A;
+  --muted:#64748B;
+  --primary:#006C67;
+  --primary-600:#005952;
+  --secondary:#00A896;
+  --accent:#F25F5C;
+  --card:#ffffffcc;
+  --glass:rgba(255,255,255,0.55);
+  --border:#e5e7eb;
+  --shadow:0 10px 25px rgba(2, 44, 34, .08);
+  --radius:20px;
+}
+
+/* ===== Base ===== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background:linear-gradient(140deg, var(--bg-from), var(--bg-to));
+}
+.container{width:min(1120px, 92%); margin-inline:auto}
+
+/* ===== Header/Navegación ===== */
+.uc-header{
+  position:sticky; top:0; z-index:50;
+  background:rgba(255, 255, 255, 0.85);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0, 0, 0, 0.05);
+  box-shadow:0 1px 3px rgba(0, 0, 0, 0.03);
+}
+.header-inner{display:flex; align-items:center; justify-content:space-between; padding:1rem 0}
+.brand{display:flex; align-items:center; gap:.8rem}
+.logo{height:42px}
+.brand-text{font-weight:700; letter-spacing:-0.02em; color:var(--primary); font-size:1.25rem}
+.nav{display:flex; align-items:center; gap:.5rem}
+.nav-link{
+  color:var(--text); text-decoration:none; padding:.5rem 1rem; border-radius:8px;
+  font-weight:500; font-size:0.9375rem; transition:all 0.2s ease;
+}
+.nav-link:hover{background:rgba(0, 108, 103, 0.08); color:var(--primary)}
+.nav-link.active{background:var(--primary); color:white}
+.nav-toggle{display:none; background:none; border:none; font-size:1.25rem}
+
+/* ===== Botones ===== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  padding:.7rem 1rem; border-radius:18px; text-decoration:none; font-weight:600; transition:.2s ease;
+  border:1px solid transparent;
+}
+.btn-primary{background:var(--primary); color:#fff}
+.btn-primary:hover{background:var(--primary-600)}
+.btn-secondary{background:var(--secondary); color:#062726}
+.btn-secondary:hover{filter:brightness(.95)}
+.btn-outline{border-color:var(--primary); color:var(--primary); background:#fff}
+.btn-outline:hover{background:#f6fffd}
+.btn-ghost{background:transparent; color:var(--primary)}
+.btn-ghost:hover{background:#00000008}
+
+/* ===== Hero (Landing) ===== */
+.hero{position:relative; padding:3rem 0 .2rem}
+.hero-bg{
+  position:absolute; inset:-10% -10% auto -10%; height:55%;
+  background: radial-gradient(600px 260px at 80% 10%, #00a89622, transparent 70%),
+              radial-gradient(600px 260px at 10% 30%, #006c6722, transparent 70%);
+  pointer-events:none; z-index:-1;
+}
+.hero-inner{display:grid; grid-template-columns:1.3fr .9fr; gap:2rem; align-items:center}
+.hero-copy h1{font-size:clamp(1.8rem, 2.2rem + 1vw, 3rem); line-height:1.1; margin:0 0 .6rem}
+.lead{color:var(--muted); font-size:1.05rem; margin:0 0 1.2rem}
+.hero-actions{display:flex; gap:.8rem; flex-wrap:wrap}
+.meta{margin-top:1rem; color:#334155; display:flex; align-items:center; gap:.5rem}
+.dot{opacity:.6}
+
+/* ===== Perfil (Landing) ===== */
+.hero-media{display:flex; justify-content:center}
+.profile-card{
+  width:60%; max-width:560px; border-radius:var(--radius); padding:1.2rem; background:var(--glass);
+  border:1px solid #ffffff66; box-shadow:var(--shadow)
+}
+.avatar{
+  width:100%; aspect-ratio: 3/4; object-fit:cover; border-radius:12px; border:1px solid var(--border);
+}
+.profile-info{margin:.9rem 0 .6rem}
+.profile-info h3{margin:.2rem 0 .2rem}
+.profile-info p{margin:0; color:var(--muted)}
+.shield{height:28px; margin-top:.6rem; opacity:.9}
+.profile-actions{display:flex; gap:.6rem; margin-top:.8rem}
+
+/* ===== Tarjetas genéricas ===== */
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:1.2rem; box-shadow:var(--shadow)
+}
+.glass{backdrop-filter:blur(8px) saturate(140%)}
+.inline-actions{display:flex; gap:.8rem; margin-top:.8rem; flex-wrap:wrap}
+
+/* ===== Sección About y Recursos ===== */
+.about{padding:2rem 0}
+.resources{padding:1.2rem 0 2.8rem; text-align:center}
+.resources h2{margin-bottom:1rem}
+.grid{
+  display:grid; gap:1rem; grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.tool{
+  display:block; padding:1rem; border:1px solid var(--border); border-radius:var(--radius);
+  background:#fff; color:inherit; text-decoration:none; position:relative; overflow:hidden
+}
+.tool h3{margin:.3rem 0}
+.tool p{margin:.2rem 0; color:var(--muted)}
+.tool-icon{font-size:1.4rem}
+.chip{
+  position:absolute; right:.8rem; bottom:.8rem; font-size:.8rem; background:#F1F5F9;
+  padding:.2rem .5rem; border-radius:999px; color:#0f2a17; border:1px solid #e2e8f0;
+}
+.card-hover{transition:transform .15s ease, box-shadow .15s ease}
+.card-hover:hover{transform:translateY(-3px); box-shadow:0 8px 24px rgba(15, 23, 42, .08)}
+
+/* ===== Login (tarjeta, inputs con icono, spinner) ===== */
+.page{width:min(1100px, 92%); margin:2rem auto; text-align:center}
+.login-card{
+  background:var(--glass); border:1px solid #ffffff66; border-radius:var(--radius);
+  padding:1.4rem; box-shadow:var(--shadow); text-align:left; display:inline-block; width:100%; max-width:500px
+}
+.login-title{display:flex; align-items:center; gap:1.6rem; margin-bottom:.8rem}
+.login-title .icon{font-size:2.25rem}
+.info-card{
+  background:var(--glass); border:1px solid #ffffff66; border-radius:var(--radius);
+  padding:1.2rem; box-shadow:var(--shadow); text-align:left; display:inline-block; width:100%; max-width:500px; margin-bottom:1.5rem
+}
+.info-muted{color:var(--muted)}
+
+.input-icon{position:relative; display:inline-block; width:100%}
+.input-icon .form-control{
+  padding-left:2.4rem; border-radius:14px; border-color:var(--border);
+}
+.input-icon .prefix{
+  position:absolute; left:.7rem; top:80%; transform:translateY(-70%);
+  color:#0f172a99; font-size:1.05rem;
+}
+
+/* Tabla usuarios */
+.table-wrap{
+  background:#fff; border:1px solid var(--border); border-radius:16px;
+  box-shadow:var(--shadow); padding:1rem;
+}
+.badge{border-radius:999px}
+
+/* ===== Footer ===== */
+.uc-footer{border-top:1px solid var(--border); background:#fff8; backdrop-filter:blur(8px); text-align:center}
+.footer-inner{display:flex; justify-content:center; align-items:center; padding:1rem 0}
+.logo-sm{height:28px; margin-right:.5rem}
+.footer-inner .left{display:flex; align-items:center}
+
+/* ===== Responsive ===== */
+@media (max-width: 960px){
+  .hero-inner{grid-template-columns:1fr; text-align:left}
+}
+@media (max-width: 760px){
+  .nav{display:none}
+  .nav-toggle{display:block}
+  .grid{grid-template-columns:1fr}
+}
